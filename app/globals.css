@@ -1,0 +1,18 @@
+@import "tailwindcss";
+@config "../tailwind.config.ts";
+
+:root {
+  --brand-background: #091428;
+  --brand-surface: #1A1A23;
+  --brand-primary: #6A42E3;
+  --brand-secondary: #42E3D0;
+  --brand-expense: #F86161;
+  --brand-warning: #E7BE29;
+  --brand-muted: #6B7280;
+}
+
+body {
+  background: var(--brand-background);
+  color: #FFFFFF;
+  font-family: var(--font-plus-jakarta-sans), sans-serif;
+}
