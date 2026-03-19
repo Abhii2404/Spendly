@@ -3,10 +3,11 @@
 import React, { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
+import { formatAmount } from '@/lib/utils'
 import PageHeader from '@/components/layout/PageHeader'
 import DynamicIcon from '@/components/ui/DynamicIcon'
 import { useSettingsData, Category, NewCategory } from '@/hooks/useSettingsData'
-import { LogOut, Plus, Trash2, FileText, Download, AlertTriangle, Printer, ShoppingCart, Scissors, PiggyBank, Dumbbell, Globe, Star, Camera, FileDown, ChevronRight, Loader2, AlertCircle } from 'lucide-react'
+import { LogOut, Plus, Trash2, FileText, Download, AlertTriangle, Printer, ShoppingCart, Scissors, PiggyBank, Dumbbell, Globe, Star, Camera, FileDown, ChevronRight, Loader2, AlertCircle, Pencil, X } from 'lucide-react'
 
 // Available icons requested
 const AVAILABLE_ICONS = [
@@ -35,7 +36,11 @@ export default function SettingsPage() {
     isAddingCategory,
     isDeletingCategory,
     addCategoryError,
-    userProfile
+    userProfile,
+    budgets,
+    isLoadingBudgets,
+    setBudgetLimit,
+    removeBudgetLimit
   } = useSettingsData()
 
   // State
@@ -58,6 +63,16 @@ export default function SettingsPage() {
   // Reset state
   const [showResetConfirm, setShowResetConfirm] = useState(false)
   const [isResetting, setIsResetting] = useState(false)
+
+  // Budget management state
+  const [showAddBudget, setShowAddBudget] = useState(false)
+  const [editingBudgetId, setEditingBudgetId] = useState<string | null>(null)
+  const [deletingBudgetId, setDeletingBudgetId] = useState<string | null>(null)
+  
+  const [budgetCategoryId, setBudgetCategoryId] = useState('')
+  const [budgetAmount, setBudgetAmount] = useState('')
+  const [isSavingBudget, setIsSavingBudget] = useState(false)
+  const [budgetError, setBudgetError] = useState('')
 
   // Handlers
   const handleLogout = async () => {
@@ -162,6 +177,47 @@ export default function SettingsPage() {
   }
 
   const filteredCategories = categories.filter(c => c.type === activeTab)
+  const expenseCategories = categories.filter(c => c.type === 'expense')
+  const availableBudgetCategories = expenseCategories.filter(
+    c => !budgets.some(b => b.category_id === c.id)
+  )
+
+  const handleSaveBudget = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setBudgetError('')
+    
+    if (!budgetCategoryId) {
+      setBudgetError('Please select a category')
+      return
+    }
+    
+    const amountNum = parseFloat(budgetAmount)
+    if (isNaN(amountNum) || amountNum <= 0) {
+      setBudgetError('Please enter a valid amount greater than 0')
+      return
+    }
+    
+    setIsSavingBudget(true)
+    try {
+      await setBudgetLimit(budgetCategoryId, amountNum)
+      setShowAddBudget(false)
+      setEditingBudgetId(null)
+      setBudgetCategoryId('')
+      setBudgetAmount('')
+    } catch (err: any) {
+      setBudgetError(err.message || 'Failed to save budget')
+    } finally {
+      setIsSavingBudget(false)
+    }
+  }
+
+  const openEditBudget = (budget: any) => {
+    setBudgetCategoryId(budget.category_id)
+    setBudgetAmount(budget.monthly_limit.toString())
+    setEditingBudgetId(budget.id)
+    setShowAddBudget(false)
+    setBudgetError('')
+  }
 
   return (
     <div className="min-h-screen bg-[#091428] pb-[100px] max-w-[430px] mx-auto w-full relative animate-fade-in-up">
@@ -252,6 +308,233 @@ export default function SettingsPage() {
               <div className="w-[36px] h-[36px] rounded-full flex items-center justify-center text-[16px] font-[700] text-[#6A42E3] self-end mt-[-8px]" style={{ background: 'rgba(106,66,227,0.15)' }}>
                 ₹
               </div>
+            </div>
+
+            {/* Task 4.5 — Budget Limits Section */}
+            <div className="rounded-[20px] p-[20px] mb-[16px] no-print" style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)', backdropFilter: 'blur(12px)' }}>
+              <div className="flex flex-col mb-[16px]">
+                <h2 className="text-[13px] font-[600] text-[#6B7280] uppercase tracking-[0.08em]">Budget Limits</h2>
+                <span className="text-[12px] text-[#6B7280] mt-[2px]">Set monthly spending limits per category</span>
+              </div>
+
+              {isLoadingBudgets ? (
+                <div className="flex flex-col gap-[8px]">
+                  {[1,2].map(i => <div key={i} className="h-[52px] w-full rounded-[14px] bg-[rgba(255,255,255,0.08)] animate-pulse" />)}
+                </div>
+              ) : (
+                <>
+                  {budgets.length === 0 ? (
+                    <div className="flex flex-col items-center justify-center py-[20px] text-center">
+                      <div className="text-[14px] font-[500] text-[#6B7280]">No budget limits set yet.</div>
+                      <div className="text-[12px] text-[#6B7280] mt-[4px]">Add limits to track your spending.</div>
+                    </div>
+                  ) : (
+                    <div className="flex flex-col gap-[8px] mb-[16px]">
+                      {budgets.map(budget => {
+                        const isDeleting = deletingBudgetId === budget.id
+                        const isEditing = editingBudgetId === budget.id
+                        
+                        if (isEditing) {
+                           return (
+                             <form 
+                               key={budget.id}
+                               onSubmit={handleSaveBudget} 
+                               className="rounded-[16px] p-[16px]"
+                               style={{ 
+                                 background: 'rgba(255,255,255,0.03)', 
+                                 border: '1px solid rgba(255,255,255,0.08)',
+                                 animation: 'fadeInSlideDown 200ms ease-out forwards'
+                               }}
+                             >
+                               <div className="text-[14px] font-[600] text-[#FFFFFF] mb-[14px]">Edit Budget</div>
+                               
+                               {budgetError && (
+                                 <div className="flex items-center gap-[6px] text-[11px] text-[#F86161] p-[6px_14px] rounded-[8px] mb-[14px]" style={{ background: 'rgba(248,97,97,0.08)' }}>
+                                   <AlertCircle size={12} /> {budgetError}
+                                 </div>
+                               )}
+                               
+                               <div className="w-full bg-[rgba(255,255,255,0.04)] rounded-[10px] p-[12px_14px] text-white text-[14px] mb-[10px] opacity-70 flex items-center gap-[10px]" style={{ border: '1px solid rgba(255,255,255,0.04)' }}>
+                                 <div className="w-[20px] h-[20px] rounded-[6px] flex items-center justify-center shrink-0" style={{ background: `${budget.category_color}26` }}>
+                                   <DynamicIcon name={budget.category_icon} size={12} color={budget.category_color} />
+                                 </div>
+                                 {budget.category_name}
+                               </div>
+
+                               <div className="relative mb-[14px]">
+                                 <span className="absolute left-[14px] top-[50%] -translate-y-[50%] text-[#FFFFFF] text-[15px] font-[600]">₹</span>
+                                 <input 
+                                   type="number"
+                                   min="1"
+                                   step="0.01"
+                                   value={budgetAmount}
+                                   onChange={(e) => setBudgetAmount(e.target.value)}
+                                   placeholder="Monthly limit"
+                                   className="w-full bg-[#1A1A23] rounded-[10px] pl-[32px] pr-[14px] py-[12px] text-white text-[14px] placeholder:text-[#6B7280] focus:outline-none focus:border-[#6A42E3]"
+                                   style={{ border: '1px solid rgba(255,255,255,0.08)' }}
+                                   required
+                                 />
+                               </div>
+                               
+                               <div className="flex gap-[8px]">
+                                 <button type="button" onClick={() => setEditingBudgetId(null)} className="flex-1 p-[11px] rounded-[10px] text-[#6B7280] hover:text-[#FFFFFF] text-[14px] text-center cursor-pointer transition-colors" style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)' }}>Cancel</button>
+                                 <button type="submit" disabled={isSavingBudget} className="flex-1 p-[11px] rounded-[10px] bg-[#6A42E3] text-[#FFFFFF] text-[14px] font-[600] text-center cursor-pointer transition-all hover:brightness-[1.1] disabled:opacity-70 border-none flex items-center justify-center gap-[6px]">
+                                   {isSavingBudget ? <><Loader2 size={16} className="animate-spin" /> Saving...</> : 'Save'}
+                                 </button>
+                               </div>
+                             </form>
+                           )
+                        }
+
+                        return (
+                          <div key={budget.id} className="flex items-center gap-[12px] p-[12px_14px] rounded-[14px] transition-all duration-150" style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)' }}>
+                            <div className="w-[38px] h-[38px] rounded-[10px] shrink-0 flex items-center justify-center" style={{ background: `${budget.category_color}26` }}>
+                              <DynamicIcon name={budget.category_icon} size={18} color={budget.category_color} />
+                            </div>
+                            <div className="flex flex-col flex-1 truncate">
+                              <span className="text-[14px] font-[500] text-[#FFFFFF] truncate">{budget.category_name}</span>
+                              <span className="text-[12px] text-[#6B7280] mt-[2px]">{formatAmount(budget.monthly_limit)} / month</span>
+                            </div>
+                            
+                            {isDeleting ? (
+                              <div className="flex items-center gap-[6px]" style={{ animation: 'fadeIn 150ms ease-out forwards' }}>
+                                <span className="text-[11px] text-[#F86161] font-[700]">Remove?</span>
+                                <button 
+                                  onClick={() => removeBudgetLimit(budget.id).then(() => setDeletingBudgetId(null))}
+                                  className="p-[3px_8px] rounded-[6px] text-[11px] font-[600] text-[#F86161] cursor-pointer"
+                                  style={{ border: '1px solid #F86161', background: 'rgba(248,97,97,0.2)' }}
+                                >
+                                  Yes
+                                </button>
+                                <button 
+                                  onClick={() => setDeletingBudgetId(null)}
+                                  className="p-[3px_8px] rounded-[6px] text-[11px] font-[600] text-[#6B7280] cursor-pointer"
+                                  style={{ border: '1px solid rgba(255,255,255,0.12)', background: 'rgba(255,255,255,0.06)' }}
+                                >
+                                  No
+                                </button>
+                              </div>
+                            ) : (
+                              <div className="flex items-center gap-[4px] shrink-0">
+                                <button 
+                                  onClick={() => openEditBudget(budget)}
+                                  className="bg-transparent border-none p-[8px] rounded-[8px] cursor-pointer transition-all duration-150 text-[#6B7280]"
+                                  onMouseOver={(e) => {
+                                    e.currentTarget.style.color = '#FFFFFF';
+                                    e.currentTarget.style.background = 'rgba(255,255,255,0.06)';
+                                  }}
+                                  onMouseOut={(e) => {
+                                    e.currentTarget.style.color = '#6B7280';
+                                    e.currentTarget.style.background = 'transparent';
+                                  }}
+                                  aria-label="Edit budget"
+                                >
+                                  <Pencil size={15} color="currentColor" />
+                                </button>
+                                <button 
+                                  onClick={() => setDeletingBudgetId(budget.id)}
+                                  className="bg-transparent border-none p-[8px] rounded-[8px] cursor-pointer transition-all duration-150 text-[#6B7280]"
+                                  onMouseOver={(e) => {
+                                    e.currentTarget.style.color = '#F86161';
+                                    e.currentTarget.style.background = 'rgba(248,97,97,0.1)';
+                                  }}
+                                  onMouseOut={(e) => {
+                                    e.currentTarget.style.color = '#6B7280';
+                                    e.currentTarget.style.background = 'transparent';
+                                  }}
+                                  aria-label="Remove budget"
+                                >
+                                  <X size={15} color="currentColor" />
+                                </button>
+                              </div>
+                            )}
+                          </div>
+                        )
+                      })}
+                    </div>
+                  )}
+
+                  {/* Add Budget Form */}
+                  {!showAddBudget ? (
+                    <button 
+                      onClick={() => {
+                        setShowAddBudget(true)
+                        setEditingBudgetId(null)
+                        setBudgetCategoryId('')
+                        setBudgetAmount('')
+                        setBudgetError('')
+                      }}
+                      className="w-full flex items-center justify-center gap-[8px] p-[12px_16px] rounded-[14px] cursor-pointer transition-all duration-150 text-[#6A42E3] text-[14px] font-[600]"
+                      style={{ background: 'rgba(106,66,227,0.1)', border: '1px dashed rgba(106,66,227,0.4)', marginTop: budgets.length > 0 ? '0' : '16px' }}
+                      onMouseOver={(e) => {
+                        e.currentTarget.style.background = 'rgba(106,66,227,0.15)'
+                        e.currentTarget.style.borderColor = '#6A42E3'
+                      }}
+                      onMouseOut={(e) => {
+                        e.currentTarget.style.background = 'rgba(106,66,227,0.1)'
+                        e.currentTarget.style.borderColor = 'rgba(106,66,227,0.4)'
+                      }}
+                    >
+                      <Plus size={16} /> Set Budget for Category
+                    </button>
+                  ) : (
+                    <form 
+                      onSubmit={handleSaveBudget} 
+                      className="rounded-[16px] p-[16px] mt-[8px]"
+                      style={{ 
+                        background: 'rgba(255,255,255,0.03)', 
+                        border: '1px solid rgba(255,255,255,0.08)',
+                        animation: 'fadeInSlideDown 200ms ease-out forwards'
+                      }}
+                    >
+                      <div className="text-[14px] font-[600] text-[#FFFFFF] mb-[14px]">New Budget Limit</div>
+                      
+                      {budgetError && (
+                        <div className="flex items-center gap-[6px] text-[11px] text-[#F86161] p-[6px_14px] rounded-[8px] mb-[14px]" style={{ background: 'rgba(248,97,97,0.08)' }}>
+                          <AlertCircle size={12} /> {budgetError}
+                        </div>
+                      )}
+                      
+                      <div className="mb-[10px]">
+                        <select
+                          value={budgetCategoryId}
+                          onChange={(e) => setBudgetCategoryId(e.target.value)}
+                          className="w-full bg-[#1A1A23] rounded-[10px] p-[12px_14px] text-white text-[14px] placeholder:text-[#6B7280] focus:outline-none focus:border-[#6A42E3] appearance-none"
+                          style={{ border: '1px solid rgba(255,255,255,0.08)' }}
+                          required
+                        >
+                          <option value="" disabled className="text-[#6B7280]">Select category</option>
+                          {availableBudgetCategories.map(cat => (
+                            <option key={cat.id} value={cat.id}>{cat.name}</option>
+                          ))}
+                        </select>
+                      </div>
+
+                      <div className="relative mb-[14px]">
+                        <span className="absolute left-[14px] top-[50%] -translate-y-[50%] text-[#FFFFFF] text-[15px] font-[600]">₹</span>
+                        <input 
+                          type="number"
+                          min="1"
+                          step="0.01"
+                          value={budgetAmount}
+                          onChange={(e) => setBudgetAmount(e.target.value)}
+                          placeholder="Monthly limit"
+                          className="w-full bg-[#1A1A23] rounded-[10px] pl-[32px] pr-[14px] py-[12px] text-white text-[14px] placeholder:text-[#6B7280] focus:outline-none focus:border-[#6A42E3]"
+                          style={{ border: '1px solid rgba(255,255,255,0.08)' }}
+                          required
+                        />
+                      </div>
+                      
+                      <div className="flex gap-[8px]">
+                        <button type="button" onClick={() => setShowAddBudget(false)} className="flex-1 p-[11px] rounded-[10px] text-[#6B7280] hover:text-[#FFFFFF] text-[14px] text-center cursor-pointer transition-colors" style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)' }}>Cancel</button>
+                        <button type="submit" disabled={isSavingBudget || (!budgetCategoryId && availableBudgetCategories.length === 0)} className="flex-1 p-[11px] rounded-[10px] bg-[#6A42E3] text-[#FFFFFF] text-[14px] font-[600] text-center cursor-pointer transition-all hover:brightness-[1.1] disabled:opacity-70 border-none flex items-center justify-center gap-[6px]">
+                          {isSavingBudget ? <><Loader2 size={16} className="animate-spin" /> Saving...</> : 'Save'}
+                        </button>
+                      </div>
+                    </form>
+                  )}
+                </>
+              )}
             </div>
 
             {/* Task 5 — Categories Section */}

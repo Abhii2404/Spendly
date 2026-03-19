@@ -24,6 +24,14 @@ function formatDateHeader(dateStr: string) {
   return localD.toLocaleDateString('en-US', { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' })
 }
 
+function formatDateRange(dateStr: string) {
+  if (!dateStr) return '';
+  const [year, month, day] = dateStr.split('-');
+  const dateObj = new Date(Number(year), Number(month) - 1, Number(day));
+  const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+  return `${parseInt(day, 10)} ${months[dateObj.getMonth()]} ${year}`;
+}
+
 export default function TransactionsPage() {
   const {
     transactions,
@@ -44,7 +52,11 @@ export default function TransactionsPage() {
     refetch,
     totalIncomeThisMonth,
     totalExpenseThisMonth,
-    categoriesList
+    categoriesList,
+    customStartDate,
+    customEndDate,
+    setCustomStartDate,
+    setCustomEndDate
   } = useTransactionsData()
 
   const { setRefetchDashboard } = useRefetch()
@@ -208,6 +220,101 @@ export default function TransactionsPage() {
             )
           })}
         </div>
+
+        {/* Date Range Panel */}
+        {activeFilter === 'custom' && (
+          <div 
+            className="grid grid-cols-2 gap-[10px] p-[14px_16px] rounded-[16px] mb-[14px] overflow-hidden"
+            style={{ 
+              background: 'rgba(255,255,255,0.04)', 
+              border: '1px solid rgba(255,255,255,0.08)',
+              animation: 'slideDownPanel 200ms ease-out forwards',
+              transformOrigin: 'top'
+            }}
+          >
+            <style dangerouslySetInnerHTML={{__html: `
+              @keyframes slideDownPanel {
+                from { max-height: 0; opacity: 0; padding-top: 0; padding-bottom: 0; border: none; }
+                to { max-height: 200px; opacity: 1; }
+              }
+            `}} />
+            
+            <div className="flex flex-col">
+              <label className="text-[11px] uppercase text-[#6B7280] tracking-[0.05em] mb-[6px]">From</label>
+              <input 
+                type="date" 
+                max={new Date().toISOString().split('T')[0]}
+                value={customStartDate}
+                onChange={(e) => {
+                  const val = e.target.value
+                  setCustomStartDate(val)
+                  if (customEndDate && val > customEndDate) {
+                    setCustomEndDate('')
+                  }
+                }}
+                className="w-full bg-[#1A1A23] rounded-[10px] p-[10px_12px] text-white text-[13px] font-sans focus:outline-none focus:border-[#6A42E3] transition-all"
+                style={{ border: '1px solid rgba(255,255,255,0.08)' }}
+                onFocus={(e) => {
+                  e.target.style.borderColor = '#6A42E3'
+                  e.target.style.boxShadow = '0 0 0 3px rgba(106,66,227,0.15)'
+                }}
+                onBlur={(e) => {
+                  e.target.style.borderColor = 'rgba(255,255,255,0.08)'
+                  e.target.style.boxShadow = 'none'
+                }}
+              />
+            </div>
+            
+            <div className="flex flex-col">
+              <label className="text-[11px] uppercase text-[#6B7280] tracking-[0.05em] mb-[6px]">To</label>
+              <input 
+                type="date" 
+                max={new Date().toISOString().split('T')[0]}
+                min={customStartDate || undefined}
+                value={customEndDate}
+                onChange={(e) => setCustomEndDate(e.target.value)}
+                className="w-full bg-[#1A1A23] rounded-[10px] p-[10px_12px] text-white text-[13px] font-sans focus:outline-none focus:border-[#6A42E3] transition-all"
+                style={{ border: '1px solid rgba(255,255,255,0.08)' }}
+                onFocus={(e) => {
+                  e.target.style.borderColor = '#6A42E3'
+                  e.target.style.boxShadow = '0 0 0 3px rgba(106,66,227,0.15)'
+                }}
+                onBlur={(e) => {
+                  e.target.style.borderColor = 'rgba(255,255,255,0.08)'
+                  e.target.style.boxShadow = 'none'
+                }}
+              />
+            </div>
+
+            {customStartDate && customEndDate && customEndDate < customStartDate && (
+              <div className="col-span-2 text-[11px] text-[#F86161] mt-[4px]">
+                End date must be after start date
+              </div>
+            )}
+
+            {customStartDate && customEndDate && customEndDate >= customStartDate ? (
+              <div className="col-span-2 flex items-center justify-between mt-[8px]">
+                <div className="text-[12px] text-[#6A42E3] font-[500]">
+                  Showing results from {formatDateRange(customStartDate)} to {formatDateRange(customEndDate)}
+                </div>
+                <button 
+                  onClick={() => {
+                    setCustomStartDate('')
+                    setCustomEndDate('')
+                    setActiveFilter('all')
+                  }}
+                  className="text-[12px] text-[#6B7280] hover:text-[#FFFFFF] transition-colors border-none bg-transparent cursor-pointer"
+                >
+                  Clear dates
+                </button>
+              </div>
+            ) : (!customStartDate || !customEndDate) && (
+              <div className="col-span-2 text-center py-[8px] text-[12px] text-[#6B7280]">
+                Select a date range to filter
+              </div>
+            )}
+          </div>
+        )}
 
         {/* Section 6 — Filter Dropdowns Row */}
         <div className="grid grid-cols-2 gap-[10px] mb-[20px]">

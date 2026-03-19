@@ -16,6 +16,16 @@ export interface NewCategory {
   color: string
 }
 
+export interface Budget {
+  id: string
+  category_id: string
+  category_name: string
+  category_icon: string
+  category_color: string
+  monthly_limit: number
+  month: string
+}
+
 export interface SettingsData {
   categories: Category[]
   isLoading: boolean
@@ -27,6 +37,10 @@ export interface SettingsData {
   addCategoryError: string | null
   refetch: () => void
   userProfile: { name: string, email: string, avatarUrl: string | null } | null
+  budgets: Budget[]
+  isLoadingBudgets: boolean
+  setBudgetLimit: (categoryId: string, limit: number) => Promise<void>
+  removeBudgetLimit: (budgetId: string) => Promise<void>
 }
 
 export function useSettingsData(): SettingsData {
@@ -39,11 +53,15 @@ export function useSettingsData(): SettingsData {
   const [addCategoryError, setAddCategoryError] = useState<string | null>(null)
   
   const [userProfile, setUserProfile] = useState<{ name: string, email: string, avatarUrl: string | null } | null>(null)
+  
+  const [budgets, setBudgets] = useState<Budget[]>([])
+  const [isLoadingBudgets, setIsLoadingBudgets] = useState(true)
 
   const supabase = createClient()
 
   const fetchSettingsData = useCallback(async () => {
     setIsLoading(true)
+    setIsLoadingBudgets(true)
     setError(null)
     
     try {
@@ -51,6 +69,7 @@ export function useSettingsData(): SettingsData {
       if (!user) {
         setError('Not authenticated')
         setIsLoading(false)
+        setIsLoadingBudgets(false)
         return
       }
 
@@ -85,10 +104,41 @@ export function useSettingsData(): SettingsData {
         setCategories(sorted as Category[])
       }
 
+      // Fetch Budgets
+      const currentMonth = new Date().toISOString().slice(0, 7)
+      const { data: budgetData, error: budgetError } = await supabase
+        .from('budgets')
+        .select(`
+          id,
+          monthly_limit,
+          month,
+          category_id,
+          categories:category_id (name, icon, color)
+        `)
+        .eq('user_id', user.id)
+        .eq('month', currentMonth)
+
+      if (budgetError) throw budgetError
+      
+      if (budgetData) {
+        const formattedBudgets = budgetData.map((b: any) => ({
+          id: b.id,
+          category_id: b.category_id,
+          category_name: b.categories?.name || 'Unknown',
+          category_icon: b.categories?.icon || 'CircleDot',
+          category_color: b.categories?.color || '#FFFFFF',
+          monthly_limit: b.monthly_limit,
+          month: b.month
+        })).sort((a, b) => a.category_name.localeCompare(b.category_name))
+        
+        setBudgets(formattedBudgets)
+      }
+
     } catch (err: any) {
       setError(err.message || 'Failed to fetch settings data')
     } finally {
       setIsLoading(false)
+      setIsLoadingBudgets(false)
     }
   }, [supabase])
 
@@ -143,6 +193,55 @@ export function useSettingsData(): SettingsData {
     }
   }
 
+  const setBudgetLimit = async (categoryId: string, limit: number) => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser()
+      if (!user) throw new Error('Not authenticated')
+
+      const currentMonth = new Date().toISOString().slice(0, 7)
+
+      const { error } = await supabase
+        .from('budgets')
+        .upsert({
+          user_id: user.id,
+          category_id: categoryId,
+          month: currentMonth,
+          monthly_limit: limit
+        }, {
+          onConflict: 'user_id, category_id, month'
+        })
+
+      if (error) throw error
+      await fetchSettingsData()
+    } catch (err: any) {
+      setError(err.message || 'Failed to set budget limit')
+      throw err
+    }
+  }
+
+  const removeBudgetLimit = async (budgetId: string) => {
+    try {
+      setBudgets(prev => prev.filter(b => b.id !== budgetId))
+      
+      const { data: { user } } = await supabase.auth.getUser()
+      if (!user) throw new Error('Not authenticated')
+
+      const { error } = await supabase
+        .from('budgets')
+        .delete()
+        .eq('id', budgetId)
+        .eq('user_id', user.id)
+
+      if (error) {
+        await fetchSettingsData()
+        throw error
+      }
+    } catch (err: any) {
+      setError(err.message || 'Failed to remove budget limit')
+      throw err
+    }
+  }
+
   const deleteCategory = async (id: string) => {
     setError(null)
     setIsDeletingCategory(id)
@@ -192,6 +291,10 @@ export function useSettingsData(): SettingsData {
     isDeletingCategory,
     addCategoryError,
     refetch: fetchSettingsData,
-    userProfile
+    userProfile,
+    budgets,
+    isLoadingBudgets,
+    setBudgetLimit,
+    removeBudgetLimit
   }
 }

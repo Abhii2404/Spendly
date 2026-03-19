@@ -43,6 +43,10 @@ export interface TransactionsState {
   totalIncomeThisMonth: number
   totalExpenseThisMonth: number
   categoriesList: Category[]
+  customStartDate: string
+  customEndDate: string
+  setCustomStartDate: (d: string) => void
+  setCustomEndDate: (d: string) => void
 }
 
 export function useTransactionsData(): TransactionsState {
@@ -56,8 +60,18 @@ export function useTransactionsData(): TransactionsState {
   const [typeFilter, setTypeFilter] = useState<'all' | 'income' | 'expense'>('all')
   const [categoryFilter, setCategoryFilter] = useState('')
   const [activeTab, setActiveTab] = useState<'one-time' | 'recurring'>('one-time')
+  const [customStartDate, setCustomStartDate] = useState('')
+  const [customEndDate, setCustomEndDate] = useState('')
 
   const supabase = createClient()
+
+  const handleSetActiveFilter = useCallback((f: FilterPeriod) => {
+    setActiveFilter(f)
+    if (f !== 'custom') {
+      setCustomStartDate('')
+      setCustomEndDate('')
+    }
+  }, [])
 
   const fetchTransactions = useCallback(async () => {
     setIsLoading(true)
@@ -141,29 +155,35 @@ export function useTransactionsData(): TransactionsState {
       if (categoryFilter && t.category_id !== categoryFilter) return false
 
       // 5. Period filter
-      const txnDate = new Date(t.date)
-      // Normalizing Dates to compare properly against YYYY-MM-DD
-      const now = new Date()
-      // Adjust to local timezone ISO string correctly if needed, or simply string compare
-      const todayStr = new Date(now.getTime() - now.getTimezoneOffset() * 60000).toISOString().split('T')[0]
-      
-      if (activeFilter === 'today') {
-        if (t.date !== todayStr) return false
-      } else if (activeFilter === 'week') {
-        const weekAgo = new Date(now)
-        weekAgo.setDate(now.getDate() - 7)
-        if (txnDate < weekAgo) return false
-      } else if (activeFilter === 'month') {
-        const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1)
-        if (txnDate < startOfMonth) return false
-      } else if (activeFilter === 'year') {
-        const startOfYear = new Date(now.getFullYear(), 0, 1)
-        if (txnDate < startOfYear) return false
+      if (activeFilter === 'custom') {
+        if (customStartDate && customEndDate) {
+          if (t.date < customStartDate || t.date > customEndDate) return false
+        }
+      } else {
+        const txnDate = new Date(t.date)
+        // Normalizing Dates to compare properly against YYYY-MM-DD
+        const now = new Date()
+        // Adjust to local timezone ISO string correctly if needed, or simply string compare
+        const todayStr = new Date(now.getTime() - now.getTimezoneOffset() * 60000).toISOString().split('T')[0]
+        
+        if (activeFilter === 'today') {
+          if (t.date !== todayStr) return false
+        } else if (activeFilter === 'week') {
+          const weekAgo = new Date(now)
+          weekAgo.setDate(now.getDate() - 7)
+          if (txnDate < weekAgo) return false
+        } else if (activeFilter === 'month') {
+          const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1)
+          if (txnDate < startOfMonth) return false
+        } else if (activeFilter === 'year') {
+          const startOfYear = new Date(now.getFullYear(), 0, 1)
+          if (txnDate < startOfYear) return false
+        }
       }
       
       return true
     })
-  }, [transactions, activeTab, searchQuery, typeFilter, categoryFilter, activeFilter])
+  }, [transactions, activeTab, searchQuery, typeFilter, categoryFilter, activeFilter, customStartDate, customEndDate])
 
   const currentMonthData = useMemo(() => {
     const now = new Date()
@@ -193,7 +213,7 @@ export function useTransactionsData(): TransactionsState {
     categoryFilter,
     activeTab,
     setSearchQuery,
-    setActiveFilter,
+    setActiveFilter: handleSetActiveFilter,
     setTypeFilter,
     setCategoryFilter,
     setActiveTab,
@@ -201,6 +221,10 @@ export function useTransactionsData(): TransactionsState {
     refetch: fetchTransactions,
     totalIncomeThisMonth: currentMonthData.inc,
     totalExpenseThisMonth: currentMonthData.exp,
-    categoriesList
+    categoriesList,
+    customStartDate,
+    customEndDate,
+    setCustomStartDate,
+    setCustomEndDate
   }
 }

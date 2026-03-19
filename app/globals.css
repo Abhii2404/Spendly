@@ -16,3 +16,13 @@ body {
   color: #FFFFFF;
   font-family: var(--font-plus-jakarta-sans), sans-serif;
 }
+
+input[type="date"]::-webkit-calendar-picker-indicator {
+  filter: invert(1);
+  opacity: 0.6;
+  cursor: pointer;
+}
+
+input[type="date"]::-webkit-inner-spin-button {
+  display: none;
+}

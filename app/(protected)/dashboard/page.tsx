@@ -15,6 +15,14 @@ function getGreeting(name: string) {
   return `Good evening, ${name}! 👋`
 }
 
+function formatDateRange(dateStr: string) {
+  if (!dateStr) return '';
+  const [year, month, day] = dateStr.split('-');
+  const dateObj = new Date(Number(year), Number(month) - 1, Number(day));
+  const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+  return `${parseInt(day, 10)} ${months[dateObj.getMonth()]} ${year}`;
+}
+
 function IconByName({ name, color, size = 20, className = "" }: { name: string, color?: string, size?: number, className?: string }) {
   const Icon = (LucideIcons as any)[name] || LucideIcons.HelpCircle
   return <Icon color={color} size={size} className={className} />
@@ -31,8 +39,16 @@ export default function DashboardPage() {
     recurringTransactions,
     budgetProgress,
     isLoading,
+    isRefetching,
     error,
     userName,
+    activePeriod,
+    customStartDate,
+    customEndDate,
+    setActivePeriod,
+    setCustomStartDate,
+    setCustomEndDate,
+    periodLabel,
     refetch
   } = useDashboardData()
 
@@ -50,8 +66,11 @@ export default function DashboardPage() {
     // If it's a fallback 100% due to no past data, render 'New' gracefully
     if (val === 1000000) {
       return (
-        <div className="inline-flex items-center gap-[3px] rounded-full px-[8px] py-[3px] mt-[8px]" style={{ background: 'rgba(255,255,255,0.1)' }}>
-          <span className="text-[11px] font-semibold text-white">New</span>
+        <div className="mt-[8px]">
+          <div className="inline-flex items-center gap-[3px] rounded-full px-[8px] py-[3px]" style={{ background: 'rgba(255,255,255,0.1)' }}>
+            <span className="text-[11px] font-semibold text-white">New</span>
+          </div>
+          <div className="text-[10px] text-[#6B7280] mt-[4px]">no previous data</div>
         </div>
       )
     }
@@ -61,15 +80,28 @@ export default function DashboardPage() {
     const bg = isPositive ? 'rgba(66, 227, 208, 0.15)' : 'rgba(248, 97, 97, 0.15)'
     const icon = isPositive ? 'ArrowUp' : 'ArrowDown'
     
+    let vsLabel = 'vs last month'
+    if (activePeriod === 'week') vsLabel = 'vs last week'
+    if (activePeriod === 'year') vsLabel = 'vs last year'
+    if (activePeriod === 'custom') vsLabel = 'vs previous period'
+    
     return (
-      <div className="inline-flex items-center gap-[3px] rounded-full px-[8px] py-[3px] mt-[8px]" style={{ background: bg }}>
-        <IconByName name={icon} color={color} size={10} />
-        <span className="text-[11px] font-semibold" style={{ color }}>
-          {Math.abs(val).toFixed(1)}%
-        </span>
+      <div className="mt-[8px]">
+        <div className="inline-flex items-center gap-[3px] rounded-full px-[8px] py-[3px]" style={{ background: bg }}>
+          <IconByName name={icon} color={color} size={10} />
+          <span className="text-[11px] font-semibold" style={{ color }}>
+            {Math.abs(val).toFixed(1)}%
+          </span>
+        </div>
+        <div className="text-[10px] text-[#6B7280] mt-[4px]">{vsLabel}</div>
       </div>
     )
   }
+
+  const recentTransactionsTitle = activePeriod === 'week' ? 'Transactions This Week'
+    : activePeriod === 'month' ? 'Transactions This Month'
+    : activePeriod === 'year' ? 'Transactions This Year'
+    : `Transactions: ${periodLabel}`
 
   return (
     <div className="min-h-screen bg-[#091428] pb-[100px] max-w-[430px] mx-auto w-full animate-fade-in-up">
@@ -129,17 +161,149 @@ export default function DashboardPage() {
               <p className="text-[#6B7280] text-[13px] mt-[4px]">Here's your financial overview</p>
             </div>
 
-            <div className="grid grid-cols-2 gap-[12px] mb-[12px]">
+            {/* Period Selector */}
+            <div className="flex justify-between items-center mb-[20px]">
+              <div className="text-[14px] font-semibold text-white truncate max-w-[120px] sm:max-w-none">
+                {periodLabel}
+              </div>
+              <div className="flex gap-[6px] shrink-0">
+                {(['week', 'month', 'year', 'custom'] as const).map(p => {
+                  const isActive = activePeriod === p
+                  const label = p === 'week' ? 'Wk' : p === 'month' ? 'Mo' : p === 'year' ? 'Yr' : 'Custom'
+                  return (
+                    <button
+                      key={p}
+                      onClick={() => setActivePeriod(p)}
+                      className="p-[6px_12px] rounded-full text-[12px] font-[600] transition-all duration-150 cursor-pointer"
+                      style={{
+                        background: isActive ? '#6A42E3' : 'rgba(255,255,255,0.06)',
+                        color: isActive ? '#FFFFFF' : '#6B7280',
+                        border: isActive ? '1px solid transparent' : '1px solid rgba(255,255,255,0.08)',
+                        boxShadow: isActive ? '0 0 8px rgba(106,66,227,0.4)' : 'none'
+                      }}
+                      onMouseOver={(e) => {
+                        if(!isActive) e.currentTarget.style.color = '#FFFFFF'
+                      }}
+                      onMouseOut={(e) => {
+                        if(!isActive) e.currentTarget.style.color = '#6B7280'
+                      }}
+                    >
+                      <span className="sm:hidden">{label}</span>
+                      <span className="hidden sm:inline">{p === 'custom' ? 'Custom' : p.charAt(0).toUpperCase() + p.slice(1)}</span>
+                    </button>
+                  )
+                })}
+              </div>
+            </div>
+
+            {/* Date Range Panel */}
+            {activePeriod === 'custom' && (
               <div 
-                className="rounded-[20px] p-[16px] backdrop-blur-[12px] flex flex-col relative"
-                style={{ background: 'rgba(255, 255, 255, 0.04)', border: '1px solid rgba(255, 255, 255, 0.08)' }}
+                className="grid grid-cols-2 gap-[10px] p-[14px_16px] rounded-[16px] mb-[20px] overflow-hidden"
+                style={{ 
+                  background: 'rgba(255,255,255,0.04)', 
+                  border: '1px solid rgba(255,255,255,0.08)',
+                  animation: 'slideDownPanel 200ms ease-out forwards',
+                  transformOrigin: 'top'
+                }}
               >
-                <div className="text-[11px] font-medium text-[#6B7280] uppercase tracking-[0.05em] mb-[8px]">
-                  Income
+                <style dangerouslySetInnerHTML={{__html: `
+                  @keyframes slideDownPanel {
+                    from { max-height: 0; opacity: 0; padding-top: 0; padding-bottom: 0; border: none; }
+                    to { max-height: 200px; opacity: 1; }
+                  }
+                `}} />
+                
+                <div className="flex flex-col">
+                  <label className="text-[11px] uppercase text-[#6B7280] tracking-[0.05em] mb-[6px]">From</label>
+                  <input 
+                    type="date" 
+                    max={new Date().toISOString().split('T')[0]}
+                    value={customStartDate}
+                    onChange={(e) => {
+                      const val = e.target.value
+                      setCustomStartDate(val)
+                      if (customEndDate && val > customEndDate) {
+                        setCustomEndDate('')
+                      }
+                    }}
+                    className="w-full bg-[#1A1A23] rounded-[10px] p-[10px_12px] text-white text-[13px] font-sans focus:outline-none focus:border-[#6A42E3] transition-all"
+                    style={{ border: '1px solid rgba(255,255,255,0.08)' }}
+                    onFocus={(e) => {
+                      e.target.style.borderColor = '#6A42E3'
+                      e.target.style.boxShadow = '0 0 0 3px rgba(106,66,227,0.15)'
+                    }}
+                    onBlur={(e) => {
+                      e.target.style.borderColor = 'rgba(255,255,255,0.08)'
+                      e.target.style.boxShadow = 'none'
+                    }}
+                  />
                 </div>
-                <div className="text-[24px] font-extrabold text-[#42E3D0] block">
-                  {formatAmount(totalIncome)}
+                
+                <div className="flex flex-col">
+                  <label className="text-[11px] uppercase text-[#6B7280] tracking-[0.05em] mb-[6px]">To</label>
+                  <input 
+                    type="date" 
+                    max={new Date().toISOString().split('T')[0]}
+                    min={customStartDate || undefined}
+                    value={customEndDate}
+                    onChange={(e) => setCustomEndDate(e.target.value)}
+                    className="w-full bg-[#1A1A23] rounded-[10px] p-[10px_12px] text-white text-[13px] font-sans focus:outline-none focus:border-[#6A42E3] transition-all"
+                    style={{ border: '1px solid rgba(255,255,255,0.08)' }}
+                    onFocus={(e) => {
+                      e.target.style.borderColor = '#6A42E3'
+                      e.target.style.boxShadow = '0 0 0 3px rgba(106,66,227,0.15)'
+                    }}
+                    onBlur={(e) => {
+                      e.target.style.borderColor = 'rgba(255,255,255,0.08)'
+                      e.target.style.boxShadow = 'none'
+                    }}
+                  />
                 </div>
+
+                {customStartDate && customEndDate && customEndDate < customStartDate && (
+                  <div className="col-span-2 text-[11px] text-[#F86161] mt-[4px]">
+                    End date must be after start date
+                  </div>
+                )}
+
+                {customStartDate && customEndDate && customEndDate >= customStartDate ? (
+                  <div className="col-span-2 flex items-center justify-between mt-[8px]">
+                    <div className="text-[12px] text-[#6A42E3] font-[500]">
+                      Showing results from {formatDateRange(customStartDate)} to {formatDateRange(customEndDate)}
+                    </div>
+                    <button 
+                      onClick={() => {
+                        setCustomStartDate('')
+                        setCustomEndDate('')
+                        setActivePeriod('month')
+                      }}
+                      className="text-[12px] text-[#6B7280] hover:text-[#FFFFFF] transition-colors border-none bg-transparent cursor-pointer"
+                    >
+                      Clear dates
+                    </button>
+                  </div>
+                ) : (!customStartDate || !customEndDate) && (
+                  <div className="col-span-2 text-center py-[8px] text-[12px] text-[#6B7280]">
+                    Select a date range to filter
+                  </div>
+                )}
+              </div>
+            )}
+
+            <div className={`transition-opacity duration-200 ${isRefetching ? 'opacity-70 animate-pulse pointer-events-none' : 'opacity-100'}`}>
+              <div className="grid grid-cols-2 gap-[12px] mb-[12px]">
+                <div 
+                  className="rounded-[20px] p-[16px] backdrop-blur-[12px] flex flex-col relative"
+                  style={{ background: 'rgba(255, 255, 255, 0.04)', border: '1px solid rgba(255, 255, 255, 0.08)' }}
+                >
+                  <div className="text-[11px] font-medium text-[#6B7280] uppercase tracking-[0.05em] mb-[2px]">
+                    Income
+                  </div>
+                  <div className="text-[10px] text-[#374151] mb-[6px]">{periodLabel}</div>
+                  <div className="text-[24px] font-extrabold text-[#42E3D0] block">
+                    {formatAmount(totalIncome)}
+                  </div>
                 <div className="absolute top-[16px] right-[16px] w-[32px] h-[32px] rounded-full flex items-center justify-center" style={{ background: 'rgba(66, 227, 208, 0.15)' }}>
                   <IconByName name="TrendingUp" color="#42E3D0" size={16} />
                 </div>
@@ -148,16 +312,17 @@ export default function DashboardPage() {
                 </div>
               </div>
 
-              <div 
-                className="rounded-[20px] p-[16px] backdrop-blur-[12px] flex flex-col relative"
-                style={{ background: 'rgba(255, 255, 255, 0.04)', border: '1px solid rgba(255, 255, 255, 0.08)' }}
-              >
-                <div className="text-[11px] font-medium text-[#6B7280] uppercase tracking-[0.05em] mb-[8px]">
-                  Expense
-                </div>
-                <div className="text-[24px] font-extrabold text-[#F86161] block">
-                  {formatAmount(totalExpense)}
-                </div>
+                <div 
+                  className="rounded-[20px] p-[16px] backdrop-blur-[12px] flex flex-col relative"
+                  style={{ background: 'rgba(255, 255, 255, 0.04)', border: '1px solid rgba(255, 255, 255, 0.08)' }}
+                >
+                  <div className="text-[11px] font-medium text-[#6B7280] uppercase tracking-[0.05em] mb-[2px]">
+                    Expense
+                  </div>
+                  <div className="text-[10px] text-[#374151] mb-[6px]">{periodLabel}</div>
+                  <div className="text-[24px] font-extrabold text-[#F86161] block">
+                    {formatAmount(totalExpense)}
+                  </div>
                 <div className="absolute top-[16px] right-[16px] w-[32px] h-[32px] rounded-full flex items-center justify-center" style={{ background: 'rgba(248, 97, 97, 0.15)' }}>
                   <IconByName name="TrendingDown" color="#F86161" size={16} />
                 </div>
@@ -244,13 +409,13 @@ export default function DashboardPage() {
               )}
             </div>
 
-            <div className="mt-[24px]">
-              <div className="flex justify-between items-center mb-[16px]">
-                <h3 className="text-white font-bold text-[16px] tracking-tight">Recent Transactions</h3>
-                <Link href="/transactions" className="text-[#6A42E3] text-[13px] font-semibold hover:underline">
-                  See all
-                </Link>
-              </div>
+              <div className="mt-[24px]">
+                <div className="flex justify-between items-center mb-[16px]">
+                  <h3 className="text-white font-bold text-[16px] tracking-tight">{recentTransactionsTitle}</h3>
+                  <Link href="/transactions" className="text-[#6A42E3] text-[13px] font-semibold hover:underline">
+                    See all
+                  </Link>
+                </div>
 
               <div className="inline-flex bg-[#1A1A23] rounded-full p-[3px] mb-[16px]">
                 <button
@@ -314,6 +479,7 @@ export default function DashboardPage() {
                 </div>
               )}
             </div>
+          </div>
           </>
         )}
       </div>
