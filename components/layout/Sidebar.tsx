@@ -9,7 +9,7 @@ import { Asterisk, LayoutDashboard, ArrowLeftRight, BarChart2, Settings, LogOut,
 export default function Sidebar() {
   const pathname = usePathname()
   const supabase = createClient()
-  const [userProfile, setUserProfile] = useState<{ name: string; email: string } | null>(null)
+  const [userProfile, setUserProfile] = useState<{ name: string; email: string; avatar_url: string | null } | null>(null)
 
   useEffect(() => {
     async function loadUser() {
@@ -18,13 +18,14 @@ export default function Sidebar() {
         // Fetch profile
         const { data: profile } = await supabase
           .from('profiles')
-          .select('name')
+          .select('name, avatar_url')
           .eq('id', session.user.id)
           .single()
 
         setUserProfile({
           name: profile?.name || 'User',
-          email: session.user.email || ''
+          email: session.user.email || '',
+          avatar_url: profile?.avatar_url || null
         })
       }
     }
@@ -88,9 +89,13 @@ export default function Sidebar() {
       {/* Bottom Profile */}
       <div className="mt-auto">
         <div className="bg-[rgba(255,255,255,0.04)] border-[1px_solid_rgba(255,255,255,0.08)] rounded-[12px] p-[12px] flex items-center gap-[10px]">
-          <div className="w-[36px] h-[36px] items-center justify-center flex rounded-full font-bold text-white text-[14px] shrink-0" style={{ background: 'linear-gradient(135deg, #6A42E3, #42E3D0)' }}>
-            {userProfile?.name ? userProfile.name.charAt(0).toUpperCase() : 'U'}
-          </div>
+          {userProfile?.avatar_url ? (
+            <img src={userProfile.avatar_url} alt="Profile" className="w-[36px] h-[36px] items-center justify-center flex rounded-full shrink-0 object-cover" />
+          ) : (
+            <div className="w-[36px] h-[36px] items-center justify-center flex rounded-full font-bold text-white text-[14px] shrink-0" style={{ background: 'linear-gradient(135deg, #6A42E3, #42E3D0)' }}>
+              {userProfile?.name ? userProfile.name.charAt(0).toUpperCase() : 'U'}
+            </div>
+          )}
           <div className="flex flex-col overflow-hidden">
             <span className="text-[13px] font-[600] text-white truncate">{userProfile?.name || 'User'}</span>
             <span className="text-[11px] text-[#6B7280] truncate">{userProfile?.email || '...'}</span>

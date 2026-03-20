@@ -8,7 +8,7 @@ import { createClient } from '@/lib/supabase/client'
 export default function DesktopHeader() {
   const pathname = usePathname()
   const supabase = createClient()
-  const [userProfile, setUserProfile] = useState<{ name: string; email: string } | null>(null)
+  const [userProfile, setUserProfile] = useState<{ name: string; email: string; avatar_url: string | null } | null>(null)
 
   useEffect(() => {
     async function loadUser() {
@@ -16,13 +16,14 @@ export default function DesktopHeader() {
       if (session?.user) {
         const { data: profile } = await supabase
           .from('profiles')
-          .select('name')
+          .select('name, avatar_url')
           .eq('id', session.user.id)
           .single()
 
         setUserProfile({
           name: profile?.name || 'User',
-          email: session.user.email || ''
+          email: session.user.email || '',
+          avatar_url: profile?.avatar_url || null
         })
       }
     }
@@ -55,9 +56,13 @@ export default function DesktopHeader() {
         </button>
 
         <div className="flex items-center gap-[10px] bg-[rgba(255,255,255,0.06)] border border-[rgba(255,255,255,0.08)] rounded-full p-[6px_14px_6px_6px] cursor-pointer hover:bg-[rgba(255,255,255,0.08)] transition-colors">
-          <div className="w-[30px] h-[30px] rounded-full flex items-center justify-center text-[12px] font-bold text-white shrink-0" style={{ background: 'linear-gradient(135deg, #6A42E3, #42E3D0)' }}>
-            {userProfile?.name ? userProfile.name.charAt(0).toUpperCase() : 'U'}
-          </div>
+          {userProfile?.avatar_url ? (
+            <img src={userProfile.avatar_url} alt="Profile" className="w-[30px] h-[30px] rounded-full shrink-0 object-cover" />
+          ) : (
+            <div className="w-[30px] h-[30px] rounded-full flex items-center justify-center text-[12px] font-bold text-white shrink-0" style={{ background: 'linear-gradient(135deg, #6A42E3, #42E3D0)' }}>
+              {userProfile?.name ? userProfile.name.charAt(0).toUpperCase() : 'U'}
+            </div>
+          )}
           <span className="text-[13px] font-semibold text-white">
             {userProfile?.name || 'User'}
           </span>

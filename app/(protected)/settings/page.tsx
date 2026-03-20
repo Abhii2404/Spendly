@@ -275,12 +275,20 @@ export default function SettingsPage() {
               <div className="rounded-[20px] p-[20px] mb-[16px] lg:mb-[20px] print-section" style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)', backdropFilter: 'blur(12px)' }}>
               <div className="text-[13px] font-[600] text-[#6B7280] uppercase tracking-[0.08em] mb-[16px]">Account</div>
               <div className="flex items-center gap-[14px] mb-[16px]">
-                <div 
-                  className="w-[52px] h-[52px] rounded-full shrink-0 flex items-center justify-center text-[20px] font-[800] text-[#FFFFFF]"
-                  style={{ background: 'linear-gradient(135deg, #6A42E3, #42E3D0)' }}
-                >
-                  {userProfile?.name ? userProfile.name.charAt(0).toUpperCase() : 'U'}
-                </div>
+                {userProfile?.avatarUrl ? (
+                  <img 
+                    src={userProfile.avatarUrl} 
+                    alt="Profile" 
+                    className="w-[52px] h-[52px] rounded-full shrink-0 object-cover" 
+                  />
+                ) : (
+                  <div 
+                    className="w-[52px] h-[52px] rounded-full shrink-0 flex items-center justify-center text-[20px] font-[800] text-[#FFFFFF]"
+                    style={{ background: 'linear-gradient(135deg, #6A42E3, #42E3D0)' }}
+                  >
+                    {userProfile?.name ? userProfile.name.charAt(0).toUpperCase() : 'U'}
+                  </div>
+                )}
                 <div>
                   <div className="text-[16px] font-[700] text-[#FFFFFF]">{userProfile?.name || 'User'}</div>
                   <div className="text-[13px] text-[#6B7280] mt-[3px]">{userProfile?.email}</div>
