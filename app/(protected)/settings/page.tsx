@@ -220,10 +220,12 @@ export default function SettingsPage() {
   }
 
   return (
-    <div className="min-h-screen bg-[#091428] pb-[100px] max-w-[430px] mx-auto w-full relative animate-fade-in-up">
-      <PageHeader title="Settings" />
+    <div className="min-h-screen bg-[#091428] pb-[100px] max-w-[430px] lg:max-w-[1200px] lg:px-[32px] mx-auto w-full relative animate-fade-in-up">
+      <div className="lg:hidden">
+        <PageHeader title="Settings" />
+      </div>
       
-      <div className="px-[20px] pt-[4px] flex flex-col">
+      <div className="px-[20px] lg:px-0 pt-[4px] lg:pt-[24px] flex flex-col">
         {/* Print-only styles logic & global scrollbar hiding */}
         <style dangerouslySetInnerHTML={{__html: `
           @media print {
@@ -265,9 +267,12 @@ export default function SettingsPage() {
             </div>
           </div>
         ) : (
-          <>
-            {/* Task 3 — Account Card */}
-            <div className="rounded-[20px] p-[20px] mb-[16px] print-section" style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)', backdropFilter: 'blur(12px)' }}>
+          <div className="lg:grid lg:grid-cols-2 lg:gap-[20px] lg:items-start">
+            
+            {/* Left Column wrapper on Desktop */}
+            <div className="flex flex-col">
+              {/* Task 3 — Account Card */}
+              <div className="rounded-[20px] p-[20px] mb-[16px] lg:mb-[20px] print-section" style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)', backdropFilter: 'blur(12px)' }}>
               <div className="text-[13px] font-[600] text-[#6B7280] uppercase tracking-[0.08em] mb-[16px]">Account</div>
               <div className="flex items-center gap-[14px] mb-[16px]">
                 <div 
@@ -299,7 +304,7 @@ export default function SettingsPage() {
             </div>
 
             {/* Task 4 — Currency Card */}
-            <div className="rounded-[20px] p-[20px] mb-[16px] no-print flex items-center justify-between" style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)', backdropFilter: 'blur(12px)' }}>
+            <div className="rounded-[20px] p-[20px] mb-[16px] lg:mb-[20px] no-print flex items-center justify-between" style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)', backdropFilter: 'blur(12px)' }}>
               <div>
                 <div className="text-[13px] font-[600] text-[#6B7280] uppercase tracking-[0.08em] mb-[16px]">Currency</div>
                 <div className="text-[15px] font-[600] text-[#FFFFFF]">Indian Rupee (₹ INR)</div>
@@ -310,8 +315,40 @@ export default function SettingsPage() {
               </div>
             </div>
 
+            <div className="hidden lg:block">
+              {/* Task 8 — Danger Zone Section (moved to Left Column on Desktop) */}
+              <div className="rounded-[20px] p-[20px] no-print flex-col" style={{ background: 'rgba(248,97,97,0.04)', border: '1px solid rgba(248,97,97,0.2)' }}>
+                <div className="text-[13px] font-[600] text-[#F86161] uppercase tracking-[0.08em] mb-[16px]">Danger Zone</div>
+                
+                <p className="text-[13px] text-[#6B7280] leading-[1.6] mb-[16px]">
+                  Permanently delete all data associated with your account, including custom configurations.
+                </p>
+                
+                <button 
+                  onClick={() => setShowResetConfirm(true)} 
+                  className="w-full rounded-[12px] p-[13px] text-[#F86161] font-[600] text-[14px] flex items-center justify-center gap-[8px] transition-all duration-150 cursor-pointer"
+                  style={{ background: 'rgba(248,97,97,0.1)', border: '1px solid rgba(248,97,97,0.3)' }}
+                  onMouseOver={(e) => {
+                    e.currentTarget.style.background = 'rgba(248,97,97,0.2)'
+                    e.currentTarget.style.borderColor = '#F86161'
+                  }}
+                  onMouseOut={(e) => {
+                    e.currentTarget.style.background = 'rgba(248,97,97,0.1)'
+                    e.currentTarget.style.borderColor = 'rgba(248,97,97,0.3)'
+                  }}
+                >
+                  <Trash2 size={16} /> Reset All Data
+                </button>
+              </div>
+            </div>
+
+            </div> {/* End Left Column */}
+            
+            {/* Right Column wrapper on Desktop */}
+            <div className="flex flex-col">
+
             {/* Task 4.5 — Budget Limits Section */}
-            <div className="rounded-[20px] p-[20px] mb-[16px] no-print" style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)', backdropFilter: 'blur(12px)' }}>
+            <div className="rounded-[20px] p-[20px] mb-[16px] lg:mb-[20px] no-print" style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)', backdropFilter: 'blur(12px)' }}>
               <div className="flex flex-col mb-[16px]">
                 <h2 className="text-[13px] font-[600] text-[#6B7280] uppercase tracking-[0.08em]">Budget Limits</h2>
                 <span className="text-[12px] text-[#6B7280] mt-[2px]">Set monthly spending limits per category</span>
@@ -538,7 +575,7 @@ export default function SettingsPage() {
             </div>
 
             {/* Task 5 — Categories Section */}
-            <div className="rounded-[20px] p-[20px] mb-[16px] no-print" style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)', backdropFilter: 'blur(12px)' }}>
+            <div className="rounded-[20px] p-[20px] mb-[16px] lg:mb-[20px] no-print" style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)', backdropFilter: 'blur(12px)' }}>
               <h2 className="text-[13px] font-[600] text-[#6B7280] uppercase tracking-[0.08em] mb-[16px]">Categories</h2>
               
               <div className="flex bg-[rgba(255,255,255,0.06)] rounded-full p-[3px] mb-[16px]">
@@ -727,7 +764,7 @@ export default function SettingsPage() {
             </div>
 
             {/* Task 7 — Export Data Section */}
-            <div className="rounded-[20px] p-[20px] mb-[16px] no-print" style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)', backdropFilter: 'blur(12px)' }}>
+            <div className="rounded-[20px] p-[20px] mb-[16px] lg:mb-0 no-print" style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)', backdropFilter: 'blur(12px)' }}>
               <div className="text-[13px] font-[600] text-[#6B7280] uppercase tracking-[0.08em] mb-[16px]">Export Data</div>
               <div className="flex flex-col">
                 <button 
@@ -772,8 +809,12 @@ export default function SettingsPage() {
               </div>
             </div>
 
-            {/* Task 8 — Danger Zone Section */}
-            <div className="rounded-[20px] p-[20px] no-print mb-[30px]" style={{ background: 'rgba(248,97,97,0.04)', border: '1px solid rgba(248,97,97,0.2)' }}>
+            </div> {/* End Right Column */}
+
+            {/* Mobile Danger Zone (Hidden on strict LG since it was moved to left column) */}
+            <div className="lg:hidden">
+              {/* Task 8 — Danger Zone Section */}
+              <div className="rounded-[20px] p-[20px] no-print mb-[30px]" style={{ background: 'rgba(248,97,97,0.04)', border: '1px solid rgba(248,97,97,0.2)' }}>
               <div className="text-[13px] font-[600] text-[#F86161] uppercase tracking-[0.08em] mb-[16px]">Danger Zone</div>
               
               <p className="text-[13px] text-[#6B7280] leading-[1.6] mb-[16px]">
@@ -796,7 +837,9 @@ export default function SettingsPage() {
                 <Trash2 size={16} /> Reset All Data
               </button>
             </div>
-          </>
+            </div>
+
+          </div>
         )}
 
         {/* Task 9 — Reset Confirmation Dialog */}

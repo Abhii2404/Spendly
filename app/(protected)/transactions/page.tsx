@@ -84,10 +84,12 @@ export default function TransactionsPage() {
   const dropdownIconUri = `url("data:image/svg+xml,%3Csvg width='10' height='6' viewBox='0 0 10 6' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M1 1L5 5L9 1' stroke='white' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E")`
 
   return (
-    <div className="min-h-screen bg-[#091428] pb-[100px] max-w-[430px] mx-auto w-full animate-fade-in-up">
-      <PageHeader title="Transactions" />
+    <div className="min-h-screen bg-[#091428] pb-[100px] max-w-[430px] lg:max-w-[1200px] lg:px-[32px] mx-auto w-full animate-fade-in-up">
+      <div className="lg:hidden">
+        <PageHeader title="Transactions" />
+      </div>
       
-      <div className="px-[20px] flex flex-col pt-[4px]">
+      <div className="px-[20px] lg:px-0 flex flex-col pt-[4px] lg:pt-[24px]">
         {/* Custom style to hide webkit scrollbars globally in this container scope */}
         <style dangerouslySetInnerHTML={{__html: `
           .no-scrollbar::-webkit-scrollbar { display: none; }
@@ -153,8 +155,11 @@ export default function TransactionsPage() {
           </button>
         </div>
 
+        {/* Desktop Filter Row Wrapper (groups search, badges, and dropdowns) */}
+        <div className="lg:flex lg:flex-row lg:items-center lg:gap-[16px] lg:mb-[24px]">
+
         {/* Section 4 — Search Bar */}
-        <div className="relative mb-[14px]">
+        <div className="relative mb-[14px] lg:mb-0 lg:w-[280px] shrink-0">
           <Search size={16} color="#6B7280" className="absolute left-[14px] top-[50%] -translate-y-[50%]" />
           <input 
             type="text" 
@@ -183,7 +188,7 @@ export default function TransactionsPage() {
         </div>
 
         {/* Section 5 — Filter Badges */}
-        <div className="flex overflow-x-auto gap-[8px] no-scrollbar mb-[14px] pb-[4px]" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
+        <div className="flex overflow-x-auto gap-[8px] no-scrollbar mb-[14px] lg:mb-0 pb-[4px] lg:pb-0 lg:flex-1" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
           {(['all', 'today', 'week', 'month', 'year', 'custom'] as FilterPeriod[]).map(fp => {
             const isActive = activeFilter === fp
             return (
@@ -317,7 +322,7 @@ export default function TransactionsPage() {
         )}
 
         {/* Section 6 — Filter Dropdowns Row */}
-        <div className="grid grid-cols-2 gap-[10px] mb-[20px]">
+        <div className="grid grid-cols-2 lg:flex lg:flex-row gap-[10px] lg:gap-[12px] mb-[20px] lg:mb-0 lg:w-[320px] shrink-0">
           <select
             value={typeFilter}
             onChange={(e) => setTypeFilter(e.target.value as any)}
@@ -354,6 +359,8 @@ export default function TransactionsPage() {
             ))}
           </select>
         </div>
+
+        </div> {/* End Desktop Filter Row Wrapper */}
 
         {/* Section 7 — Transactions List */}
         {isLoading ? (
@@ -404,7 +411,7 @@ export default function TransactionsPage() {
                     return (
                       <div 
                         key={txn.id} 
-                        className="rounded-[16px] p-[14px] flex items-center gap-[12px] transition duration-150 cursor-default group"
+                        className="rounded-[16px] p-[14px] flex lg:grid items-center lg:items-center gap-[12px] lg:gap-[16px] lg:grid-cols-[48px_auto_120px_100px_40px] transition duration-150 cursor-default group"
                         style={{ 
                           background: 'rgba(255,255,255,0.04)', 
                           border: '1px solid rgba(255,255,255,0.08)' 
@@ -414,7 +421,7 @@ export default function TransactionsPage() {
                       >
                         {/* Left Side */}
                         <div 
-                          className="w-[44px] h-[44px] rounded-[12px] flex items-center justify-center flex-shrink-0" 
+                          className="w-[44px] h-[44px] lg:w-[48px] lg:h-[48px] rounded-[12px] lg:rounded-[14px] flex items-center justify-center flex-shrink-0" 
                           style={{ background: `${txn.categories?.color || '#6A42E3'}26` }}
                         >
                           <DynamicIcon name={txn.categories?.icon || 'HelpCircle'} color={txn.categories?.color || '#6A42E3'} size={20} />
@@ -422,11 +429,11 @@ export default function TransactionsPage() {
 
                         {/* Middle Side */}
                         <div className="flex-1 min-w-0">
-                          <div className="text-[14px] font-[600] text-[#FFFFFF] whitespace-nowrap overflow-hidden text-ellipsis">
+                          <div className="text-[14px] lg:text-[15px] font-[600] text-[#FFFFFF] whitespace-nowrap overflow-hidden text-ellipsis">
                             {txn.name}
                           </div>
                           <div className="flex items-center gap-[6px] mt-[3px]">
-                            <span className="text-[12px] text-[#6B7280]">
+                            <span className="text-[12px] lg:text-[13px] text-[#6B7280]">
                               {txn.categories?.name || 'Uncategorized'}
                             </span>
                             {txn.is_recurring && (
@@ -441,8 +448,13 @@ export default function TransactionsPage() {
                           </div>
                         </div>
 
+                        {/* Date (Desktop Only column) */}
+                        <div className="hidden lg:block text-[#6B7280] text-[13px]">
+                          {new Date(txn.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+                        </div>
+
                         {/* Right side: Amount and Delete */}
-                        <div className="flex flex-col items-end gap-[6px]">
+                        <div className="flex flex-col lg:flex-row items-end lg:items-center gap-[6px] lg:justify-end">
                           {!isDeleting && (
                             <div className="font-[700] text-[15px]" style={{ color: amountColor }}>
                               {prefix}{formatAmount(txn.amount)}
@@ -507,6 +519,33 @@ export default function TransactionsPage() {
                             </button>
                           )}
                         </div>
+                        
+                        {/* Delete column container (Desktop) */}
+                        <div className="hidden lg:flex items-center justify-end">
+                          {!isDeleting && (
+                            <button 
+                              onClick={() => setDeletingId(txn.id)}
+                              className="bg-transparent border-none cursor-pointer p-[6px] rounded-[8px] transition-all duration-150 opacity-0 group-hover:opacity-100"
+                              onMouseOver={(e) => {
+                                e.currentTarget.style.color = '#F86161';
+                                e.currentTarget.style.background = 'rgba(248,97,97,0.1)';
+                                (e.currentTarget.firstChild as any).style.stroke = '#F86161';
+                              }}
+                              onMouseOut={(e) => {
+                                e.currentTarget.style.color = '#374151';
+                                e.currentTarget.style.background = 'transparent';
+                                (e.currentTarget.firstChild as any).style.stroke = '#374151';
+                              }}
+                            >
+                              <Trash2 size={16} color="#374151" className="transition-colors duration-150" />
+                            </button>
+                          )}
+                        </div>
+                        {/* Mobile Delete wrapper */}
+                        <div className="lg:hidden flex justify-end">
+                           {/* Intentionally empty for layout if needed, logic is above */}
+                        </div>
+
                       </div>
                     )
                   })}

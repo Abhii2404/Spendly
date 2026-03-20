@@ -229,10 +229,12 @@ export default function AnalyticsPage() {
   )
 
   return (
-    <div className="min-h-screen bg-[#091428] pb-[100px] max-w-[430px] mx-auto w-full animate-fade-in-up">
-      <PageHeader title="Analytics" />
+    <div className="min-h-screen bg-[#091428] pb-[100px] max-w-[430px] lg:max-w-[1200px] lg:px-[32px] mx-auto w-full animate-fade-in-up">
+      <div className="lg:hidden">
+        <PageHeader title="Analytics" />
+      </div>
       
-      <div className="px-[20px] pb-[20px]">
+      <div className="px-[20px] lg:px-[0px] pb-[20px] lg:pt-[24px]">
         {error && (
           <div className="flex items-center gap-[12px] p-[16px] rounded-[12px] mb-[16px]" style={{ background: 'rgba(248,97,97,0.08)', border: '1px solid rgba(248,97,97,0.2)' }}>
             <AlertCircle className="shrink-0 text-[#F86161]" size={20} />
@@ -242,7 +244,7 @@ export default function AnalyticsPage() {
 
         {/* Task 2: Summary Cards Row */}
         {isLoading ? (
-          <div className="grid grid-cols-3 gap-[10px] mb-[24px]">
+          <div className="grid grid-cols-3 gap-[10px] lg:gap-[16px] mb-[24px] lg:mb-[32px]">
             {[1, 2, 3].map(i => (
               <div 
                 key={i} 
@@ -252,32 +254,32 @@ export default function AnalyticsPage() {
             ))}
           </div>
         ) : (
-          <div className="grid grid-cols-3 gap-[10px] mb-[24px]">
+          <div className="grid grid-cols-3 gap-[10px] lg:gap-[16px] mb-[24px] lg:mb-[32px]">
             <div 
-              className="rounded-[16px] p-[14px_12px]"
+              className="rounded-[16px] p-[14px_12px] lg:p-[20px]"
               style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)', backdropFilter: 'blur(12px)' }}
             >
-              <span className="block text-[10px] font-[500] text-[#6B7280] uppercase tracking-[0.05em] mb-[6px]">Income</span>
-              <span className="block text-[16px] sm:text-[14px] font-[800] text-[#42E3D0] whitespace-nowrap overflow-hidden text-ellipsis" title={formatAmount(totalIncome)}>
+              <span className="block text-[10px] lg:text-[12px] font-[500] text-[#6B7280] uppercase tracking-[0.05em] mb-[6px] lg:mb-[8px]">Income</span>
+              <span className="block text-[16px] sm:text-[14px] lg:text-[24px] font-[800] text-[#42E3D0] whitespace-nowrap overflow-hidden text-ellipsis" title={formatAmount(totalIncome)}>
                 {formatAmount(totalIncome)}
               </span>
             </div>
             <div 
-              className="rounded-[16px] p-[14px_12px]"
+              className="rounded-[16px] p-[14px_12px] lg:p-[20px]"
               style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)', backdropFilter: 'blur(12px)' }}
             >
-              <span className="block text-[10px] font-[500] text-[#6B7280] uppercase tracking-[0.05em] mb-[6px]">Expense</span>
-              <span className="block text-[16px] sm:text-[14px] font-[800] text-[#F86161] whitespace-nowrap overflow-hidden text-ellipsis" title={formatAmount(totalExpense)}>
+              <span className="block text-[10px] lg:text-[12px] font-[500] text-[#6B7280] uppercase tracking-[0.05em] mb-[6px] lg:mb-[8px]">Expense</span>
+              <span className="block text-[16px] sm:text-[14px] lg:text-[24px] font-[800] text-[#F86161] whitespace-nowrap overflow-hidden text-ellipsis" title={formatAmount(totalExpense)}>
                 {formatAmount(totalExpense)}
               </span>
             </div>
             <div 
-              className="rounded-[16px] p-[14px_12px]"
+              className="rounded-[16px] p-[14px_12px] lg:p-[20px]"
               style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)', backdropFilter: 'blur(12px)' }}
             >
-              <span className="block text-[10px] font-[500] text-[#6B7280] uppercase tracking-[0.05em] mb-[6px]">Net Profit</span>
+              <span className="block text-[10px] lg:text-[12px] font-[500] text-[#6B7280] uppercase tracking-[0.05em] mb-[6px] lg:mb-[8px]">Net Profit</span>
               <span 
-                className={`block text-[16px] sm:text-[14px] font-[800] whitespace-nowrap overflow-hidden text-ellipsis ${netProfit >= 0 ? 'text-[#42E3D0]' : 'text-[#F86161]'}`}
+                className={`block text-[16px] sm:text-[14px] lg:text-[24px] font-[800] whitespace-nowrap overflow-hidden text-ellipsis ${netProfit >= 0 ? 'text-[#42E3D0]' : 'text-[#F86161]'}`}
                 title={(netProfit >= 0 ? '+' : '') + formatAmount(netProfit)}
               >
                 {netProfit >= 0 ? '+' : ''}{formatAmount(netProfit)}
@@ -286,10 +288,13 @@ export default function AnalyticsPage() {
           </div>
         )}
 
+        {/* Task 5 & 6 Desktop Grid Wrapper */}
+        <div className="lg:grid lg:grid-cols-2 lg:gap-[16px]">
+
         {/* Task 5: Pie/Doughnut Chart Section */}
         {isLoading ? <ChartCardSkeleton /> : (
           <div 
-            className="rounded-[20px] p-[20px] mb-[16px]"
+            className="rounded-[20px] p-[20px] mb-[16px] lg:mb-0 h-full flex flex-col"
             style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)', backdropFilter: 'blur(12px)' }}
           >
             <div className="flex justify-between items-start mb-[16px]">
@@ -317,9 +322,9 @@ export default function AnalyticsPage() {
               </div>
             </div>
 
-            {pieChartData.length === 0 ? <EmptyState type="transactions" /> : (
-              <>
-                <div className="relative h-[220px] mb-[20px]">
+            {pieChartData.length === 0 ? <div className="flex-1 flex items-center justify-center"><EmptyState type="transactions" /></div> : (
+              <div className="flex-1 flex flex-col justify-center">
+                <div className="relative h-[220px] lg:h-[280px] mb-[20px]">
                   <Doughnut data={pieData} options={pieOptions} />
                   <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-center pointer-events-none">
                     <span className="text-[11px] text-[#6B7280] block mb-[4px]">Total</span>
@@ -361,7 +366,7 @@ export default function AnalyticsPage() {
                     </div>
                   ))}
                 </div>
-              </>
+              </div>
             )}
           </div>
         )}
@@ -369,7 +374,7 @@ export default function AnalyticsPage() {
         {/* Task 6: Bar Chart Section */}
         {isLoading ? <ChartCardSkeleton /> : (
           <div 
-            className="rounded-[20px] p-[20px] mb-[16px]"
+            className="rounded-[20px] p-[20px] mb-[16px] lg:mb-0 h-full flex flex-col"
             style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)', backdropFilter: 'blur(12px)' }}
           >
             <div className="flex justify-between items-start mb-[16px]">
@@ -379,9 +384,9 @@ export default function AnalyticsPage() {
               </div>
             </div>
 
-            {barChartData.every(d => d.income === 0 && d.expense === 0) ? <EmptyState type="data" /> : (
-              <>
-                <div className="h-[220px] relative">
+            {barChartData.every(d => d.income === 0 && d.expense === 0) ? <div className="flex-1 flex items-center justify-center"><EmptyState type="data" /></div> : (
+              <div className="flex-1 flex flex-col justify-end">
+                <div className="h-[220px] lg:h-[280px] relative w-full">
                   <Bar data={barData} options={barOptions} />
                 </div>
                 <div className="flex justify-center gap-[20px] mt-[16px]">
@@ -394,10 +399,13 @@ export default function AnalyticsPage() {
                     <span>Expense</span>
                   </div>
                 </div>
-              </>
+              </div>
             )}
           </div>
         )}
+        
+        {/* End Desktop Grid Wrapper */}
+        </div>
 
         {/* Task 7: Line Chart Section */}
         {isLoading ? <ChartCardSkeleton /> : (
@@ -447,7 +455,7 @@ export default function AnalyticsPage() {
             </div>
 
             {lineChartData.every(d => d.value === 0) ? <EmptyState type="data" /> : (
-              <div className="h-[200px] relative">
+              <div className="h-[200px] lg:h-[240px] relative">
                 <Line data={lineDataObj} options={lineOptions} />
               </div>
             )}

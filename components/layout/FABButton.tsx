@@ -18,7 +18,7 @@ export default React.memo(function FABButton() {
       onClick={openAddTransaction}
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
-      className="group fixed bottom-[80px] left-1/2 -translate-x-1/2 w-[56px] h-[56px] bg-[#6A42E3] rounded-full flex items-center justify-center z-[51] flex-shrink-0 border-none cursor-pointer hover:brightness-110 active:scale-95 transition-all duration-100 ease-out"
+      className="group fixed bottom-[80px] left-1/2 -translate-x-1/2 lg:bottom-[32px] lg:left-[auto] lg:right-[32px] lg:translate-x-0 w-[56px] h-[56px] bg-[#6A42E3] rounded-full flex items-center justify-center z-[51] flex-shrink-0 border-none cursor-pointer hover:brightness-110 active:scale-95 transition-all duration-100 ease-out"
       style={{ boxShadow: shadow }}
       aria-label="Add Transaction"
     >

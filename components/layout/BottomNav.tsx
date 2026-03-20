@@ -17,7 +17,7 @@ export default React.memo(function BottomNav() {
 
   return (
     <nav 
-      className="fixed bottom-0 left-0 right-0 z-50 h-[64px] pb-[env(safe-area-inset-bottom)]"
+      className="fixed bottom-0 left-0 right-0 z-50 h-[64px] pb-[env(safe-area-inset-bottom)] lg:hidden"
       style={{
         background: 'rgba(15, 15, 20, 0.85)',
         backdropFilter: 'blur(20px)',

@@ -104,9 +104,11 @@ export default function DashboardPage() {
     : `Transactions: ${periodLabel}`
 
   return (
-    <div className="min-h-screen bg-[#091428] pb-[100px] max-w-[430px] mx-auto w-full animate-fade-in-up">
-      <PageHeader title="Overview" />
-      <div className="px-[20px] flex flex-col">
+    <div className="min-h-screen bg-[#091428] pb-[100px] max-w-[430px] lg:max-w-[1200px] mx-auto w-full animate-fade-in-up">
+      <div className="lg:hidden">
+        <PageHeader title="Overview" />
+      </div>
+      <div className="px-[20px] lg:px-[32px] flex flex-col">
         
         {error && (
           <div className="flex items-center gap-[12px] p-[16px] rounded-[12px] mb-[16px]" style={{ background: 'rgba(248,97,97,0.08)', border: '1px solid rgba(248,97,97,0.2)' }}>
@@ -116,10 +118,11 @@ export default function DashboardPage() {
         )}
 
         {isLoading ? (
-          <div className="animate-pulse">
-            <div className="grid grid-cols-2 gap-[12px] mb-[12px]">
+          <div className="animate-pulse lg:pt-[24px]">
+            <div className="grid grid-cols-2 lg:grid-cols-3 gap-[12px] lg:gap-[16px] mb-[12px] lg:mb-[16px]">
               <div className="h-[120px] rounded-[20px]" style={{ background: 'rgba(255, 255, 255, 0.06)' }} />
               <div className="h-[120px] rounded-[20px]" style={{ background: 'rgba(255, 255, 255, 0.06)' }} />
+              <div className="h-[120px] rounded-[20px] hidden lg:block" style={{ background: 'rgba(255, 255, 255, 0.06)' }} />
             </div>
             
             <div className="h-[80px] w-full rounded-[20px]" style={{ background: 'rgba(255, 255, 255, 0.06)' }} />
@@ -156,13 +159,13 @@ export default function DashboardPage() {
           </div>
         ) : (
           <>
-            <div className="mt-[8px] mb-[24px]">
-              <h2 className="text-white text-[22px] font-extrabold tracking-tight">{getGreeting(userName)}</h2>
-              <p className="text-[#6B7280] text-[13px] mt-[4px]">Here's your financial overview</p>
+            <div className="mt-[8px] mb-[24px] lg:mt-[24px]">
+              <h2 className="text-white text-[22px] lg:text-[24px] font-extrabold tracking-tight">{getGreeting(userName)}</h2>
+              <p className="text-[#6B7280] text-[13px] lg:text-[14px] mt-[4px]">Here's your financial overview</p>
             </div>
 
             {/* Period Selector */}
-            <div className="flex justify-between items-center mb-[20px]">
+            <div className="flex justify-between items-center mb-[20px] lg:bg-[rgba(255,255,255,0.02)] lg:rounded-[16px] lg:p-[16px] lg:border lg:border-[rgba(255,255,255,0.04)] lg:mb-[24px]">
               <div className="text-[14px] font-semibold text-white truncate max-w-[120px] sm:max-w-none">
                 {periodLabel}
               </div>
@@ -292,7 +295,7 @@ export default function DashboardPage() {
             )}
 
             <div className={`transition-opacity duration-200 ${isRefetching ? 'opacity-70 animate-pulse pointer-events-none' : 'opacity-100'}`}>
-              <div className="grid grid-cols-2 gap-[12px] mb-[12px]">
+              <div className="grid grid-cols-2 lg:grid-cols-3 gap-[12px] lg:gap-[16px] mb-[12px] lg:mb-[16px]">
                 <div 
                   className="rounded-[20px] p-[16px] backdrop-blur-[12px] flex flex-col relative"
                   style={{ background: 'rgba(255, 255, 255, 0.04)', border: '1px solid rgba(255, 255, 255, 0.08)' }}
@@ -301,7 +304,7 @@ export default function DashboardPage() {
                     Income
                   </div>
                   <div className="text-[10px] text-[#374151] mb-[6px]">{periodLabel}</div>
-                  <div className="text-[24px] font-extrabold text-[#42E3D0] block">
+                  <div className="text-[24px] lg:text-[28px] font-extrabold text-[#42E3D0] block">
                     {formatAmount(totalIncome)}
                   </div>
                 <div className="absolute top-[16px] right-[16px] w-[32px] h-[32px] rounded-full flex items-center justify-center" style={{ background: 'rgba(66, 227, 208, 0.15)' }}>
@@ -320,7 +323,7 @@ export default function DashboardPage() {
                     Expense
                   </div>
                   <div className="text-[10px] text-[#374151] mb-[6px]">{periodLabel}</div>
-                  <div className="text-[24px] font-extrabold text-[#F86161] block">
+                  <div className="text-[24px] lg:text-[28px] font-extrabold text-[#F86161] block">
                     {formatAmount(totalExpense)}
                   </div>
                 <div className="absolute top-[16px] right-[16px] w-[32px] h-[32px] rounded-full flex items-center justify-center" style={{ background: 'rgba(248, 97, 97, 0.15)' }}>
@@ -330,10 +333,9 @@ export default function DashboardPage() {
                   {formatPercentage(expenseChange, false)}
                 </div>
               </div>
-            </div>
 
             <div 
-              className="w-full rounded-[20px] mb-[24px] p-[20px] flex items-center justify-between backdrop-blur-[12px]"
+              className="w-full lg:w-auto rounded-[20px] lg:mb-0 mb-[24px] p-[20px] flex items-center justify-between backdrop-blur-[12px] col-span-2 lg:col-span-1"
               style={{ 
                 background: 'rgba(255, 255, 255, 0.04)', 
                 border: '1px solid rgba(255, 255, 255, 0.08)',
@@ -342,8 +344,8 @@ export default function DashboardPage() {
               }}
             >
               <div>
-                <span className="text-[12px] text-[#6B7280] uppercase tracking-wide block mb-1">Net Balance</span>
-                <div className="text-[32px] font-extrabold tracking-tight text-[#FFFFFF]">
+                <span className="text-[12px] text-[#6B7280] uppercase tracking-wide block mb-1 lg:text-[13px]">Net Balance</span>
+                <div className="text-[32px] lg:text-[36px] font-extrabold tracking-tight text-[#FFFFFF]">
                   {formatAmount(netBalance)}
                 </div>
               </div>
@@ -354,17 +356,18 @@ export default function DashboardPage() {
                 <IconByName name="Wallet" color="#6A42E3" size={24} />
               </div>
             </div>
+          </div>
 
             <div>
-              <div className="flex justify-between items-center mb-[16px]">
-                <h3 className="text-white font-bold text-[16px] tracking-tight">Budget Overview</h3>
+              <div className="flex justify-between items-center mb-[16px] lg:mt-[24px]">
+                <h3 className="text-white font-bold text-[16px] lg:text-[18px] tracking-tight">Budget Overview</h3>
               </div>
               {budgetProgress.length === 0 ? (
                 <div className="text-center text-[#6B7280] text-[14px] p-[24px]">
                   No budgets set. Add one in Settings.
                 </div>
               ) : (
-                <div>
+                <div className="lg:grid lg:grid-cols-2 lg:gap-[16px]">
                   {budgetProgress.map((budget, i) => {
                     let barColor = '#42E3D0'
                     if (budget.percentage >= 100) barColor = '#F86161'
@@ -409,10 +412,10 @@ export default function DashboardPage() {
               )}
             </div>
 
-              <div className="mt-[24px]">
+              <div className="mt-[24px] lg:mt-[32px]">
                 <div className="flex justify-between items-center mb-[16px]">
-                  <h3 className="text-white font-bold text-[16px] tracking-tight">{recentTransactionsTitle}</h3>
-                  <Link href="/transactions" className="text-[#6A42E3] text-[13px] font-semibold hover:underline">
+                  <h3 className="text-white font-bold text-[16px] lg:text-[18px] tracking-tight">{recentTransactionsTitle}</h3>
+                  <Link href="/transactions" className="text-[#6A42E3] text-[13px] lg:text-[14px] font-semibold hover:underline">
                     See all
                   </Link>
                 </div>
